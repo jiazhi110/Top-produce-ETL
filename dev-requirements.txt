@@ -1,0 +1,12 @@
+# venv-dev requirements (开发环境)
+# 包含调试、交互式分析和测试所需依赖
+
+#jupyter>=1.0.0
+ipykernel>=1.0.0
+pandas==2.2.3
+pytest==7.4.2
+
+# 生产依赖也加上，方便一站安装
+pyspark==3.0.3
+pyyaml==6.0.1
+boto3==1.34.98

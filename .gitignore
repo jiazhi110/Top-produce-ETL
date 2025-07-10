@@ -1,3 +1,19 @@
+# Python
 venv/
+venv-dev/
 __pycache__/
 *.pyc
+
+# VS Code
+.vscode/
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# Notepad++
+nppBackup/
+
+# test
+test_data/
+notebooks/
