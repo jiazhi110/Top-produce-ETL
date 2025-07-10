@@ -1,0 +1,13 @@
+env: dev
+
+input:
+  source_type: s3
+  path: s3://myjustinbucket51562/input/top_products/
+
+output:
+  path: s3://myjustinbucket51562/output/top_products/
+
+processing:
+  group_by_column: region
+  target_metric: sales
+  top_n: 3
