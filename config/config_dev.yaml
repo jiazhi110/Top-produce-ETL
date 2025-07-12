@@ -2,7 +2,9 @@ env: dev
 
 input:
   source_type: s3
-  path: s3://myjustinbucket51562/input/top_products/
+  city_path: s3a://myjustinbucket51562/top-produce/data/city_info.csv
+  produce_path: s3://myjustinbucket51562/top-produce/data/product_info.parquet
+  user_visit_action_path: s3://myjustinbucket51562/top-produce/data/user_visit_action.parquet
 
 output:
   path: s3://myjustinbucket51562/output/top_products/

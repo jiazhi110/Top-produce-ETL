@@ -1,6 +1,6 @@
 # venv requirements (生产环境模拟)
 # 只包含真正运行时必须的依赖，保证和 Glue 环境一致
 
-pyspark==3.0.3
+pyspark==3.3.2
 pyyaml==6.0.1
 boto3==1.34.98

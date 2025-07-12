@@ -16,4 +16,4 @@ nppBackup/
 
 # test
 test_data/
-notebooks/
+src/notebooks/
