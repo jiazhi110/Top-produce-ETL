@@ -2,12 +2,16 @@ env: dev
 
 input:
   source_type: s3
-  city_path: s3a://myjustinbucket51562/top-produce/data/city_info.csv
-  produce_path: s3://myjustinbucket51562/top-produce/data/product_info.parquet
-  user_visit_action_path: s3://myjustinbucket51562/top-produce/data/user_visit_action.parquet
+  # city_path: s3a://myjustinbucket51562/top-produce/data/city_info.csv
+  # produce_path: s3a://myjustinbucket51562/top-produce/data/product_info.parquet
+  # user_visit_action_path: s3a://myjustinbucket51562/top-produce/data/user_visit_action.parquet
+  city_path: s3a://jiazhi110-flink-staging-bucket/top-produce/data/city_info.csv
+  produce_path: s3a://jiazhi110-flink-staging-bucket/top-produce/data/product_info.csv
+  # user_visit_action_path: s3a://jiazhi110-flink-staging-bucket/user_action/dt=2019-07-17/
+  user_visit_action_path: s3a://myjustinbucket51562/user_action/
 
 output:
-  path: s3://myjustinbucket51562/output/top_products/
+  path: s3://jiazhi110-flink-staging-bucket/output/top_products/
 
 processing:
   group_by_column: region
