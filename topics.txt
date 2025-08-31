@@ -1,0 +1,1 @@
+Error while executing topic command : The AdminClient thread has exited. Call: listTopics

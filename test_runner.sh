@@ -12,6 +12,6 @@ fi
 
 # 运行测试
 echo "运行测试中..."
-pytest test/test_top3_logic.py -v
+pytest test/test_clean_data.py -v
 
 echo "测试完成!"

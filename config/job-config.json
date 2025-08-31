@@ -1,0 +1,25 @@
+{
+    "Name": "top-produce-etl-job-cli",
+    "Description": "ETL job for top produce, created via AWS CLI.",
+    "Role": "arn:aws:iam::366019841267:role/JustinGlueS3Role",
+    "Command": {
+      "Name": "glueetl",
+      "ScriptLocation": "s3://myjustinbucket51562/etl-jobs/top-produce-etl/jobs/job_runner.py",
+      "PythonVersion": "3"
+    },
+    "DefaultArguments": {
+      "--job-language": "python",
+      "--extra-py-files": "s3://myjustinbucket51562/etl-jobs/top-produce-etl/top-produce-etl-v1.0.6.zip",
+      "--config_path": "s3://myjustinbucket51562/etl-jobs/top-produce-etl/config/config_prod.yaml",
+      "--TempDir": "s3://myjustinbucket51562/etl-jobs/top-produce-etl/temp/",
+      "--job_name_param": "top-produce-etl",
+
+      "--enable-continuous-cloudwatch-log": "true",
+      "--enable-metrics": "true",
+      "--enable-spark-ui": "true"
+    },
+    "GlueVersion": "4.0",
+    "WorkerType": "G.1X",
+    "NumberOfWorkers": 2
+  }
+  

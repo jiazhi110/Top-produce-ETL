@@ -100,59 +100,8 @@ else
   echo "No requirements file found at $REQUIREMENTS_FILE — continuing without third-party wheels"
 fi
 
-# Create entry script for Glue (script will be at root of package)
-cat > "$TEMP_DIR/glue_entry.py" <<'PY'
-import sys, os
-from awsglue.utils import getResolvedOptions
-import yaml
-
-# Append package src
-sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
-
-# your imports here - ensure these modules exist in src
-from utils.logger import setup_logging
-from utils.spark_helper import create_glue_context
-from transform import clean_data
-from writers import write_to_parquet
-
-def load_config_from_s3(s3_path):
-    import boto3
-    from botocore.exceptions import ClientError
-    if not s3_path.startswith("s3://"):
-        raise ValueError("config_path must be an s3:// path")
-    bucket_key = s3_path.replace("s3://","").split("/",1)
-    bucket = bucket_key[0]
-    key = bucket_key[1] if len(bucket_key)>1 else ""
-    if not key:
-        raise ValueError("config_path must include object key (s3://bucket/path/to/config.yaml)")
-    s3 = boto3.client('s3')
-    try:
-        resp = s3.get_object(Bucket=bucket, Key=key)
-        content = resp['Body'].read().decode('utf-8')
-        return yaml.safe_load(content)
-    except ClientError as e:
-        raise RuntimeError(f"Failed to load config from {s3_path}: {e}")
-
-def main():
-    args = getResolvedOptions(sys.argv, ['JOB_NAME','config_path'])
-    logger = setup_logging()
-    logger.info(f"Starting job {args['JOB_NAME']}")
-    glue_context, spark = create_glue_context()
-    configs = load_config_from_s3(args['config_path'])
-    # validate configs minimal fields
-    if 'output' not in configs or 'path' not in configs['output']:
-        raise RuntimeError("Missing output.path in config")
-    try:
-        df = clean_data.run(spark, configs)
-        write_to_parquet.write_df_to_s3(df, configs['output']['path'])
-        logger.info("Job finished")
-    except Exception as e:
-        logger.error(f"Job failed: {e}")
-        raise
-
-if __name__ == '__main__':
-    main()
-PY
+# Copy job_runner.py as the main script
+cp "$TEMP_DIR/src/main/job_runner.py" "$TEMP_DIR/job_runner.py"
 
 # build wheel files for requirements (optional)
 if [[ -f "$TEMP_DIR/requirements.txt" ]]; then
@@ -167,7 +116,7 @@ fi
 
 # zip package (use absolute paths to make archive predictable)
 pushd "$TEMP_DIR" >/dev/null
-zip -r "$PACKAGE_NAME" glue_entry.py src $( [[ -d config ]] && echo "config" || echo "") $( [[ -f requirements.txt ]] && echo "requirements.txt" || echo "")
+zip -r "$PACKAGE_NAME" src $( [[ -d config ]] && echo "config" || echo "") $( [[ -f requirements.txt ]] && echo "requirements.txt" || echo "")
 # include wheels dir if exists
 if [[ -d wheels && $(ls wheels | wc -l) -gt 0 ]]; then
   zip -r "$PACKAGE_NAME" wheels
@@ -178,6 +127,10 @@ popd >/dev/null
 S3_PACKAGE_PATH="s3://$S3_BUCKET/$S3_PREFIX/$PACKAGE_NAME"
 echo "Uploading package to $S3_PACKAGE_PATH"
 $AWS_CMD s3 cp "$TEMP_DIR/$PACKAGE_NAME" "$S3_PACKAGE_PATH" "${AWS_CLI_ARGS[@]}"
+
+# upload the main script separately
+echo "Uploading main script to s3://$S3_BUCKET/$S3_PREFIX/jobs/job_runner.py"
+$AWS_CMD s3 cp "$TEMP_DIR/job_runner.py" "s3://$S3_BUCKET/$S3_PREFIX/jobs/job_runner.py" "${AWS_CLI_ARGS[@]}"
 
 # upload any wheels to a wheels/ folder
 if [[ -d "$TEMP_DIR/wheels" && $(ls "$TEMP_DIR/wheels" | wc -l) -gt 0 ]]; then
@@ -193,7 +146,7 @@ fi
 
 echo "Done. Package: $S3_PACKAGE_PATH"
 echo "Glue job suggestions (what DEs normally set):"
-echo " - Script S3 path: $S3_PACKAGE_PATH (or glue_entry.py in that zip)"
+echo " - Script S3 path: $S3_PACKAGE_PATH (or job_runner.py in that zip)"
 echo " - Python library path: s3://$S3_BUCKET/$S3_PREFIX/$PACKAGE_NAME  (for your code)"
 echo " - Extra libraries (wheels): s3://$S3_BUCKET/$S3_PREFIX/wheels/ (add to Python library path or extra-py-files)"
 echo " - Job parameter: --config_path s3://$S3_BUCKET/$S3_PREFIX/config/config_prod.yaml"
