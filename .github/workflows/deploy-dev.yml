@@ -28,6 +28,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
 
       - name: Set up Python 3.9
         uses: actions/setup-python@v5
@@ -47,27 +49,31 @@ jobs:
     name: Package and Deploy to Dev
     runs-on: ubuntu-latest
     needs: test # 保证在测试通过后才执行部署
+
     permissions:
-      id-token: write  # OIDC权限：允许GitHub向AWS请求临时凭证
-      contents: read   # 读权限：拉取repo代码
+      id-token: write # 允许 workflow 获取 OIDC token
+      contents: read  # 允许 workflow 读取仓库内容
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.DEV_AWS_ROLE_ARN }} # 使用 Dev 环境的 IAM Role
-          aws-region: ${{ secrets.AWS_REGION }}
+          ref: ${{ github.event.inputs.branch }}
 
       - name: Package the application source code
         run: |
           echo "Packaging source code and config files..."
           zip -r job.zip ./src ./config
 
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.DEV_AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
       - name: Upload package to S3
         run: |
-          aws s3 cp job.zip s3://data-platform-dev-etl-assets-us-east-1/scripts/job.zip # <-- TODO: 替换成你真实的开发环境S3桶
+          aws s3 cp job.zip s3://${{ secrets.DEV_GLUE_SCRIPTS_BUCKET }}/scripts/job.zip
 
           echo "Deployment package uploaded successfully to S3."
           echo "Next step: Ensure your dev Glue Job in Terraform is configured with '--additional-python-modules' to include 'pyyaml==6.0.1'."
