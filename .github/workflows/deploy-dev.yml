@@ -73,7 +73,12 @@ jobs:
 
       - name: Upload package to S3
         run: |
+          # 1. 上传 zip (保持不变)
           aws s3 cp job.zip s3://${{ secrets.DEV_GLUE_SCRIPTS_BUCKET }}/scripts/job.zip
+
+          # 2. 【新增】上传入口脚本 (为了能在 Console 里正常看代码，也能正常运行)
+          aws s3 cp src/main/job_runner.py s3://${{ secrets.DEV_GLUE_SCRIPTS_BUCKET }}/scripts/job_runner.py
+          aws s3 cp config/config_dev.yaml s3://${{ secrets.DEV_GLUE_SCRIPTS_BUCKET }}/scripts/config/config_dev.yaml
 
           echo "Deployment package uploaded successfully to S3."
           echo "Next step: Ensure your dev Glue Job in Terraform is configured with '--additional-python-modules' to include 'pyyaml==6.0.1'."
