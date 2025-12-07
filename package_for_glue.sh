@@ -9,7 +9,8 @@ set -euo pipefail
 # ---- Defaults ----
 AWS_PROFILE=""
 AWS_REGION="us-east-1"
-S3_BUCKET="myjustinbucket51562"
+# TODO: Replace YOUR_S3_BUCKET_NAME with your actual S3 bucket name
+S3_BUCKET="YOUR_S3_BUCKET_NAME"
 S3_PREFIX="etl-jobs/top-produce-etl"
 PACKAGE_NAME="top-produce-etl.zip"
 REQUIREMENTS_FILE="prod-requirements.txt"
@@ -36,15 +37,15 @@ EOF
 # ---- parse args ----
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --bucket) S3_BUCKET="$2"; shift 2;;
-    --prefix) S3_PREFIX="$2"; shift 2;;
-    --package) PACKAGE_NAME="$2"; shift 2;;
-    --requirements) REQUIREMENTS_FILE="$2"; shift 2;;
-    --profile) AWS_PROFILE="$2"; shift 2;;
-    --region) AWS_REGION="$2"; shift 2;;
-    --version) VERSION="$2"; shift 2;;
-    --keep-temp) KEEP_TEMP=true; shift 1;;
-    *) echo "Unknown arg: $1"; usage;;
+    --bucket) S3_BUCKET="$2"; shift 2;; 
+    --prefix) S3_PREFIX="$2"; shift 2;; 
+    --package) PACKAGE_NAME="$2"; shift 2;; 
+    --requirements) REQUIREMENTS_FILE="$2"; shift 2;; 
+    --profile) AWS_PROFILE="$2"; shift 2;; 
+    --region) AWS_REGION="$2"; shift 2;; 
+    --version) VERSION="$2"; shift 2;; 
+    --keep-temp) KEEP_TEMP=true; shift 1;; 
+    *) echo "Unknown arg: $1"; usage;; 
   esac
 done
 

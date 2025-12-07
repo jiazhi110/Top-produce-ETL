@@ -1,20 +1,19 @@
 {
     "Name": "top-produce-etl-job-cli",
     "Description": "ETL job for top produce, created via AWS CLI.",
-    "Role": "arn:aws:iam::366019841267:role/JustinGlueS3Role",
+    "Role": "arn:aws:iam::YOUR_AWS_ACCOUNT_ID:role/JustinGlueS3Role",
     "Command": {
       "Name": "glueetl",
-      "ScriptLocation": "s3://myjustinbucket51562/etl-jobs/top-produce-etl/jobs/job_runner.py",
+      "ScriptLocation": "s3://YOUR_S3_BUCKET_NAME/etl-jobs/top-produce-etl/jobs/job_runner.py",
       "PythonVersion": "3"
     },
     "DefaultArguments": {
       "--job-language": "python",
-      "--extra-py-files": "s3://myjustinbucket51562/etl-jobs/top-produce-etl/top-produce-etl-v1.0.6.zip",
-      "--config_path": "s3://myjustinbucket51562/etl-jobs/top-produce-etl/config/config_prod.yaml",
-      "--TempDir": "s3://myjustinbucket51562/etl-jobs/top-produce-etl/temp/",
+      "--extra-py-files": "s3://YOUR_S3_BUCKET_NAME/etl-jobs/top-produce-etl/top-produce-etl-v1.0.6.zip",
+      "--config_path": "s3://YOUR_S3_BUCKET_NAME/etl-jobs/top-produce-etl/config/config_prod.yaml",
+      "--TempDir": "s3://YOUR_S3_BUCKET_NAME/etl-jobs/top-produce-etl/temp/",
       "--job_name_param": "top-produce-etl",
-      "_comment": "这是 Glue 作业配置，extra-py-files 放自家代码 zip，additional-python-modules 放第三方 wheel: '--additional-python-modules': 's3://bucket/wheels/boto3-1.34.98-py3-none-any.whl,s3://bucket/wheels/botocore-1.34.162-py3-none-any.whl,s3://bucket/wheels/jmespath-1.0.1-py3-none-any.whl,s3://bucket/wheels/py4j-0.10.9.5-py2.py3-none-any.whl,s3://bucket/wheels/pyspark-3.3.2-py2.py3-none-any.whl,s3://bucket/wheels/python_dateutil-2.9.0.post0-py2.py3-none-any.whl,s3://bucket/wheels/PyYAML-6.0.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl,s3://bucket/wheels/s3transfer-0.10.4-py3-none-any.whl,s3://bucket/wheels/six-1.17.0-py2.py3-none-any.whl,s3://bucket/wheels/urllib3-1.26.20-py2.py3-none-any.whl',",
-
+      "_comment": "TODO: Replace YOUR_S3_BUCKET_NAME and YOUR_AWS_ACCOUNT_ID with your actual values before running. 这是 Glue 作业配置，extra-py-files 放自家代码 zip，additional-python-modules 放第三方 wheel.",
       "--enable-continuous-cloudwatch-log": "true",
       "--enable-metrics": "true",
       "--enable-spark-ui": "true"
@@ -23,4 +22,3 @@
     "WorkerType": "G.1X",
     "NumberOfWorkers": 2
   }
-  
