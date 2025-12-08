@@ -34,8 +34,10 @@ def main():
         logger.info("Running in AWS Glue environment.")
         # 添加错误处理来捕获参数解析问题
         try:
-            args = getResolvedOptions(sys.argv, ['config_path', 'job_name_param'])
-            job_param = args['job_name_param']
+            # Modified: Removed 'job_name_param' requirement.
+            # Since this job script is dedicated to one ETL task, we default it internally.
+            args = getResolvedOptions(sys.argv, ['config_path'])
+            job_param = 'top-produce-etl' # Hardcoded default for this job
             configs = load_config_from_s3(args['config_path'])
         except Exception as e:
             logger.error(f"Failed to parse Glue arguments: {e}")
