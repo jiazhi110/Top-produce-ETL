@@ -18,5 +18,5 @@ nppBackup/
 jars/
 
 # test
-test_data/
+# test_data/
 src/notebooks/

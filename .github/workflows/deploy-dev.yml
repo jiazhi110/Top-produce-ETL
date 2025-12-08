@@ -88,8 +88,8 @@ jobs:
 
           # 4. Upload dimension tables (Data Ingestion Simulation)
           echo "Uploading dimension tables to S3..."
-          aws s3 cp test_data/city_info.csv/city_info.csv s3://${{ secrets.DEV_GLUE_SCRIPTS_BUCKET }}/top-produce/data/city_info.csv
-          aws s3 cp test_data/product_info.csv/product_info.csv s3://${{ secrets.DEV_GLUE_SCRIPTS_BUCKET }}/top-produce/data/product_info.csv
+          aws s3 cp test_data/city_info.csv s3://${{ secrets.DEV_GLUE_SCRIPTS_BUCKET }}/top-produce/data/city_info.csv
+          aws s3 cp test_data/product_info.csv s3://${{ secrets.DEV_GLUE_SCRIPTS_BUCKET }}/top-produce/data/product_info.csv
 
           echo "Deployment package and data uploaded successfully to S3."
           echo "Next step: Ensure your dev Glue Job in Terraform is configured with '--additional-python-modules' to include 'pyyaml==6.0.1'."
