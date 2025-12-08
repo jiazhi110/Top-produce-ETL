@@ -1,15 +1,16 @@
 # dev environment config
 
 input:
-  # city_path: s3a://YOUR_S3_BUCKET_NAME/top-produce/data/city_info.csv
-  # produce_path: s3a://YOUR_S3_BUCKET_NAME/top-produce/data/product_info.parquet
+  city_path: s3a://data-platform-dev-etl-assets-us-east-1/top-produce/data/city_info.csv
+  produce_path: s3a://data-platform-dev-etl-assets-us-east-1/top-produce/data/product_info.parquet
   # user_visit_action_path: s3a://YOUR_S3_BUCKET_NAME/top-produce/data/user_visit_action.parquet
+  user_visit_action_path: s3a://justin-data-platform-dev-flink-output-v1/user_action/
   
-  city_path: file:///mnt/e/Top-produce-ETL/test_data/city_info.csv
-  produce_path: file:///mnt/e/Top-produce-ETL/test_data/product_info.csv
+  # city_path: file:///mnt/e/Top-produce-ETL/test_data/city_info.csv
+  # produce_path: file:///mnt/e/Top-produce-ETL/test_data/product_info.csv
   # user_visit_action_path: file:///mnt/e/Top-produce-ETL/test_data/user_visit_action.csv
   # TODO: Replace YOUR_S3_BUCKET_NAME with your actual bucket name below
-  user_visit_action_path: s3a://YOUR_S3_BUCKET_NAME/user_action/
 
 output:
-  path: file:///mnt/e/Top-produce-ETL/test_data/output/
+  # path: file:///mnt/e/Top-produce-ETL/test_data/output/
+  path: s3a://justin-data-platform-dev-flink-output-v1/batch_output/

@@ -20,6 +20,10 @@ on:
   #   branches:
   #     - dev # 或者 main, 根据你的分支策略
 
+  schedule:
+    # 每天 UTC 6:00 (东八区时间 14:00) 自动触发 dev 环境部署,在 terraform 之后.那个时候terraform 创建完，正好也有s3.
+    - cron: '0 6 * * *'
+
 jobs:
   # 第一个 Job: 运行测试
   test:
@@ -73,13 +77,20 @@ jobs:
 
       - name: Upload package to S3
         run: |
-          # 1. 上传 zip (保持不变)
+          # 1. Upload zip package
           aws s3 cp job.zip s3://${{ secrets.DEV_GLUE_SCRIPTS_BUCKET }}/scripts/job.zip
 
-          # 2. 【新增】上传入口脚本 (为了能在 Console 里正常看代码，也能正常运行)
+          # 2. Upload main entry script
           aws s3 cp src/main/job_runner.py s3://${{ secrets.DEV_GLUE_SCRIPTS_BUCKET }}/scripts/job_runner.py
+          
+          # 3. Upload modified config
           aws s3 cp config/config_dev.yaml s3://${{ secrets.DEV_GLUE_SCRIPTS_BUCKET }}/scripts/config/config_dev.yaml
 
-          echo "Deployment package uploaded successfully to S3."
+          # 4. Upload dimension tables (Data Ingestion Simulation)
+          echo "Uploading dimension tables to S3..."
+          aws s3 cp test_data/city_info.csv s3://${{ secrets.DEV_GLUE_SCRIPTS_BUCKET }}/top-produce/data/city_info.csv
+          aws s3 cp test_data/product_info.csv s3://${{ secrets.DEV_GLUE_SCRIPTS_BUCKET }}/top-produce/data/product_info.csv
+
+          echo "Deployment package and data uploaded successfully to S3."
           echo "Next step: Ensure your dev Glue Job in Terraform is configured with '--additional-python-modules' to include 'pyyaml==6.0.1'."
 
