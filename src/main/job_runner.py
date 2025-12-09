@@ -47,7 +47,7 @@ def main():
         glue_context, spark = create_glue_context()
         # 初始化Glue作业
         job = Job(glue_context)
-        job.init(args['job_name_param'], args)
+        job.init(job_param, args)
     else:
         # --- 本地环境 ---
         logger.info("Running in local environment.")
