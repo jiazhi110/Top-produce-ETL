@@ -4,7 +4,9 @@ input:
   city_path: s3a://data-platform-dev-etl-assets-us-east-1/top-produce/data/city_info.csv
   produce_path: s3a://data-platform-dev-etl-assets-us-east-1/top-produce/data/product_info.parquet
   # user_visit_action_path: s3a://YOUR_S3_BUCKET_NAME/top-produce/data/user_visit_action.parquet
-  user_visit_action_path: s3a://justin-data-platform-dev-flink-output-v1/user_action/
+  # user_visit_action_path: s3a://justin-data-platform-dev-flink-output-v1/user_action/
+  # test
+  user_visit_action_path: s3a://justin-data-platform-dev-flink-output-v1/user_action/dt=2019-07-17/hr=00/
   
   # city_path: file:///mnt/e/Top-produce-ETL/test_data/city_info.csv
   # produce_path: file:///mnt/e/Top-produce-ETL/test_data/product_info.csv
