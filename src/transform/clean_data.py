@@ -14,42 +14,39 @@ def run(spark: SparkSession, configs: yaml):
 
     #read data from s3
     city_df = read_from_s3.read_s3_csv(spark, configs['input']['city_path'], header=False, inferSchema=True)
-
     produce_df = read_from_s3.read_s3_csv(spark, configs['input']['produce_path'], header=False, inferSchema=True)
-
     user_visit_action_df = read_from_s3.read_s3_parquet(spark, configs['input']['user_visit_action_path'])
 
+    # Standardize columns (Assuming specific order as per business logic)
     city_columns = ["city_id", "city_name", "area_name"]
-
     produce_columns = ["produce_id", "produce_name", "extend_info"]
 
     city_df = city_df.toDF(*city_columns)
-
     produce_df = produce_df.toDF(*produce_columns)
 
-    city_df.show()
+    # Filter logic: Identify 'click' behaviors
+    # We filter out invalid product IDs (-1, null, empty strings) and check if click_product_id is present.
+    click_condition = (
+        F.col('click_product_id').isNotNull() & 
+        (F.col('click_product_id').cast("string") != '') & 
+        (F.upper(F.col('click_product_id').cast("string")) != 'NULL') & 
+        (F.col('click_product_id').cast("string") != '-1')
+    )
 
-    produce_df.show()
-
-    # 在用户行为表中，根据click_product_id、order_product_ids，pay_product_ids找出用户行为信息，并取名为behavior字段。
-    user_visit_action_df = user_visit_action_df.withColumn('behavior',
-                                    F.when(F.col('click_product_id').isNotNull() & (F.col('click_product_id').cast("string") != '') 
-                                    & (F.col('click_product_id').cast("string") != 'null') & (F.col('click_product_id').cast("string") != '-1'), 'click')
-                                    .otherwise('other'))
+    user_visit_action_df = user_visit_action_df.withColumn(
+        'behavior',
+        F.when(click_condition, 'click').otherwise('other')
+    )
     
-    # 过滤掉其他的数据，只保留商品点击数据。
-    user_visit_action_df = user_visit_action_df.filter(F.col("behavior").isin('click'))
+    # Keep only click data
+    user_visit_action_df = user_visit_action_df.filter(F.col("behavior") == 'click')
 
-    user_visit_action_df = user_visit_action_df.drop("user_id", "session_id", "page_id",
-                              "action_time_ms", "search_keyword", "click_category_id",
-                              "order_category_ids", "order_product_ids", "pay_category_ids",
-                              "pay_product_ids")
-    
-    # user_visit_action_df_filter = user_visit_action_df.sample(fraction=0.001, seed=24)
-
-    user_visit_action_df.show(20)
-
-    user_visit_action_df.printSchema()
+    # Drop unnecessary columns to optimize memory
+    user_visit_action_df = user_visit_action_df.drop(
+        "user_id", "session_id", "page_id", "action_time_ms", "search_keyword", 
+        "click_category_id", "order_category_ids", "order_product_ids", 
+        "pay_category_ids", "pay_product_ids"
+    )
 
     city_df.createOrReplaceTempView("city")
     produce_df.createOrReplaceTempView("produce")
@@ -62,8 +59,6 @@ def run(spark: SparkSession, configs: yaml):
         left join produce on user_activity.click_product_id = produce.produce_id
     """)
 
-    user_behavior_wide.show()
-
     user_behavior_wide.createOrReplaceTempView("user_behavior_wide")
 
     user_city_product_count = spark.sql("""
@@ -72,8 +67,6 @@ def run(spark: SparkSession, configs: yaml):
         group by area_name, city_name, produce_name
         order by click_nums desc
     """)
-
-    user_city_product_count.show()
 
     user_city_product_count.createOrReplaceTempView("user_city_product_count")
 
@@ -143,7 +136,7 @@ def run(spark: SparkSession, configs: yaml):
         order by area_name, rn
     """)
 
-    product_area_city_ratio_percent.show(100, truncate=True)
+    # product_area_city_ratio_percent.show(100, truncate=True)
 
     product_area_city_ratio_percent.createOrReplaceTempView("product_area_city_ratio_percent")
 

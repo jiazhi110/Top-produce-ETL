@@ -11,7 +11,9 @@ input:
   # city_path: file:///mnt/e/Top-produce-ETL/test_data/city_info.csv
   # produce_path: file:///mnt/e/Top-produce-ETL/test_data/product_info.csv
   # user_visit_action_path: file:///mnt/e/Top-produce-ETL/test_data/user_visit_action.csv
-  # TODO: Replace YOUR_S3_BUCKET_NAME with your actual bucket name below
+  
+  # For local testing, use relative paths from the project root if needed, or update absolute paths
+  # city_path: file:///${PWD}/test_data/city_info.csv
 
 output:
   # path: file:///mnt/e/Top-produce-ETL/test_data/output/
