@@ -1,7 +1,7 @@
 import sys
 import argparse
 
-# --- 从重构后的 helper 模块导入所有需要的函数 ---
+# --- Import helpers ---
 from src.utils.spark_helper import (
     detect_environment,
     load_config_from_s3,
@@ -10,10 +10,17 @@ from src.utils.spark_helper import (
     create_glue_context
 )
 from src.utils.logger import setup_logging
-from awsglue.utils import getResolvedOptions
-from awsglue.job import Job
 
-# --- 导入你的业务逻辑模块 ---
+# Try to import Glue libraries; if not available, we are likely in a local environment.
+try:
+    from awsglue.utils import getResolvedOptions
+    from awsglue.job import Job
+except ImportError:
+    # Define dummy placeholders or handle gracefully if strictly needed
+    getResolvedOptions = None
+    Job = None
+
+# --- Import business logic ---
 from src.transform import clean_data
 from src.writers import write_to_parquet
 
@@ -25,19 +32,17 @@ def parse_local_args():
     return parser.parse_args()
 
 def main():
-    #initialize
+    # Initialize logger
     logger = setup_logging()
     is_glue_env = detect_environment()
 
     if is_glue_env:
-        # --- GLUE 环境 ---
+        # --- GLUE Environment ---
         logger.info("Running in AWS Glue environment.")
-        # 添加错误处理来捕获参数解析问题
         try:
-            # Modified: Removed 'job_name_param' requirement.
             # Since this job script is dedicated to one ETL task, we default it internally.
             args = getResolvedOptions(sys.argv, ['config_path'])
-            job_param = 'top-produce-etl' # Hardcoded default for this job
+            job_param = 'top-produce-etl' # Default job name
             configs = load_config_from_s3(args['config_path'])
         except Exception as e:
             logger.error(f"Failed to parse Glue arguments: {e}")
@@ -45,18 +50,18 @@ def main():
             sys.exit(1)
             
         glue_context, spark = create_glue_context()
-        # 初始化Glue作业
+        # Initialize Glue Job
         job = Job(glue_context)
         job.init(job_param, args)
     else:
-        # --- 本地环境 ---
+        # --- Local Environment ---
         logger.info("Running in local environment.")
         local_args = parse_local_args()
         job_param = local_args.job
         configs = load_config_from_local_file(local_args.ven)
         spark = create_spark_session(app_name=f"Local_{job_param}")
 
-    # --- 公共 ETL 逻辑 ---
+    # --- Common ETL Logic ---
     try:
         logger.info(f"Executing logic for job: '{job_param}'")
         logger.info(f"Executing logic for configs: '{configs}'")
@@ -68,13 +73,13 @@ def main():
         
         logger.info(f"Job '{job_param}' completed successfully.")
         
-        # 在Glue环境中提交作业
+        # Commit Glue job if applicable
         if is_glue_env:
             job.commit()
     except Exception as e:
         logger.error(f"Job '{job_param}' failed: {e}", exc_info=True)
         if is_glue_env:
-            job.commit()  # 即使失败也要提交作业以确保日志被写入
+            job.commit()  # Ensure logs are written even on failure
         sys.exit(1)
 
 if __name__ == '__main__':

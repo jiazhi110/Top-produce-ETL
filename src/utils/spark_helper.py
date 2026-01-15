@@ -3,35 +3,35 @@ import yaml
 import boto3
 from pyspark.sql import SparkSession
 
-# --- Glue 相关包的惰性导入 ---
-# 这样在非 Glue 环境（本地）下，即使没有安装 awsglue 库，代码也能正常运行
+# --- Lazy import for Glue libraries ---
+# Allows code to run locally even if awsglue is not installed
 try:
     from pyspark.context import SparkContext
     from awsglue.context import GlueContext
     IS_GLUE_AVAILABLE = True
 except ImportError:
-    GlueContext = None # 定义一个占位符
+    GlueContext = None # Placeholder
     IS_GLUE_AVAILABLE = False
 
 
-# --- 环境检测 ---
+# --- Environment Detection ---
 def detect_environment():
     """
-    判断当前脚本是否在 AWS Glue 环境中运行。
-    这是数据工程师中最主流和标准的做法。
+    Detect if the script is running in an AWS Glue environment.
+    Standard practice for Data Engineering workloads.
     """
     try:
-        # 尝试导入一个只有在 AWS Glue 环境中才存在的模块
+        # Attempt to import a module that exists only in AWS Glue
         from awsglue.utils import getResolvedOptions
         return True
     except ImportError:
-        # 如果导入失败，说明不在 Glue 环境中
+        # Import failed, assuming local environment
         return False
 
 
-# --- 配置加载 ---
+# --- Config Loading ---
 def load_config_from_s3(s3_path: str) -> dict:
-    """从 S3 路径加载 YAML 配置文件"""
+    """Load YAML configuration from an S3 path."""
     s3 = boto3.client('s3')
     bucket, key = s3_path.replace("s3://", "").split("/", 1)
     response = s3.get_object(Bucket=bucket, Key=key)
@@ -40,17 +40,17 @@ def load_config_from_s3(s3_path: str) -> dict:
 
 
 def load_config_from_local_file(venv: str) -> dict:
-    """从本地文件系统加载 YAML 配置文件"""
-    # 使用绝对路径以避免相对路径问题
+    """Load YAML configuration from local filesystem."""
+    # Use absolute path to avoid relative path issues
     current_dir = os.path.dirname(os.path.abspath(__file__))
     config_path = os.path.join(current_dir, f'../../config/config_{venv}.yaml')
     with open(config_path) as f:
         return yaml.safe_load(f)
 
 
-# --- Spark 和 Glue 上下文创建 ---
+# --- Spark and Glue Context Creation ---
 def _get_project_root() -> str:
-    """计算并返回项目的根目录路径。"""
+    """Calculate and return the project root directory path."""
     # __file__ -> spark_helper.py
     # .. -> utils/
     # ../.. -> src/
@@ -60,41 +60,41 @@ def _get_project_root() -> str:
 
 def create_spark_session(app_name: str = "LocalETLJob") -> SparkSession:
     """
-    为本地开发环境创建并配置 SparkSession，特别是 S3a 的访问。
+    Create and configure SparkSession for local development, specifically for S3a access.
     """
     project_root = _get_project_root()
     jars_folder = os.path.join(project_root, "jars")
     
-    # 定义需要的 JAR 包
+    # Define required JARs
     required_jars = [
         os.path.join(jars_folder, "hadoop-aws-3.3.2.jar"),
         os.path.join(jars_folder, "aws-java-sdk-bundle-1.11.1026.jar"),
-        # commons-configuration 通常作为 hadoop-aws 的传递依赖，但显式包含更可靠
+        # commons-configuration is usually a transitive dependency
     ]
 
-    # 检查 JAR 包是否存在
+    # Check if JARs exist
     for jar_path in required_jars:
         if not os.path.exists(jar_path):
-            # 使用 print 而不是 logger，因为 logger 可能还未初始化
+            # Use print instead of logger as logger might not be initialized
             print(f"Warning: Required JAR not found at {jar_path}. Local S3 access may fail.")
 
-    # 使用逗号连接所有 JAR 路径
+    # Join JAR paths with comma
     jars_string = ",".join(required_jars)
 
     builder = (
         SparkSession.builder
         .appName(app_name)
         .master("local[*]")
-        # --- Spark 性能和功能配置 ---
+        # --- Spark Performance and Capability Configs ---
         .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
         .config("spark.sql.shuffle.partitions", "8")
         .config("spark.sql.adaptive.enabled", "true")
         .config("spark.sql.execution.arrow.pyspark.enabled", "true")
         .config("spark.sql.parquet.compression.codec", "snappy")
-        # --- S3a 连接配置 ---
+        # --- S3a Connection Configs ---
         .config("spark.jars", jars_string)
         .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
-        # 凭证通常通过环境变量自动获取，这里显式配置作为备用
+        # Credentials are usually auto-fetched from env vars; explicit provider chain as backup
         .config("spark.hadoop.fs.s3a.aws.credentials.provider", "com.amazonaws.auth.DefaultAWSCredentialsProviderChain")
     )
     
@@ -104,7 +104,7 @@ def create_spark_session(app_name: str = "LocalETLJob") -> SparkSession:
 
 def create_glue_context():
     """
-    在 AWS Glue 环境中创建 GlueContext 和 SparkSession。
+    Create GlueContext and SparkSession in AWS Glue environment.
     """
     if not IS_GLUE_AVAILABLE:
         raise ImportError("Cannot create GlueContext. The required 'awsglue' library is not available.")

@@ -1,9 +1,6 @@
-# .github/workflows/deploy-dev.yml
-
 name: Deploy to Dev Environment
 
 on:
-  # 允许你从 GitHub UI 的 Actions 标签页手动触发此工作流
   workflow_dispatch:
     inputs:
       branch:
@@ -15,17 +12,11 @@ on:
         - main
         - develop
 
-  # 也可以保留推送到特定分支时自动触发的逻辑，如果需要的话
-  # push:
-  #   branches:
-  #     - dev # 或者 main, 根据你的分支策略
-
   schedule:
-    # 每天 UTC 6:00 (东八区时间 14:00) 自动触发 dev 环境部署,在 terraform 之后.那个时候terraform 创建完，正好也有s3.
     - cron: '0 6 * * *'
 
 jobs:
-  # 第一个 Job: 运行测试
+  # Job 1: Run Unit Tests
   test:
     name: Run Unit Tests
     runs-on: ubuntu-latest
@@ -46,17 +37,22 @@ jobs:
 
       - name: Run tests with pytest
         run: |
-          python -m pytest -v test/test_clean_data.py
+          # Run all tests in the test/ directory
+          # This includes:
+          # - test/test_clean_data.py (Business Logic)
+          # - test/test_readers.py    (S3 I/O Mocking)
+          # - test/test_spark_helper.py (Environment Detection)
+          python -m pytest -v test/
 
-  # 第二个 Job: 打包和部署，它依赖于 test Job 的成功
+  # Job 2: Package and Deploy (Depends on Test Success)
   deploy:
     name: Package and Deploy to Dev
     runs-on: ubuntu-latest
-    needs: test # 保证在测试通过后才执行部署
+    needs: test # Ensure deployment only happens if tests pass
 
     permissions:
-      id-token: write # 允许 workflow 获取 OIDC token
-      contents: read  # 允许 workflow 读取仓库内容
+      id-token: write # Allow workflow to request OIDC token
+      contents: read  # Allow workflow to read repository content
 
     steps:
       - name: Checkout repository

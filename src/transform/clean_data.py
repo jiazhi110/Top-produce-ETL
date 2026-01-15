@@ -3,29 +3,24 @@ from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql import functions as F
 import yaml
 from src.readers import read_from_s3
+from src.schemas.table_schemas import city_schema, produce_schema
 import logging
 
-#initialize logger
-logging.getLogger(__name__)
+# Initialize logger
+logger = logging.getLogger(__name__)
 
 def run(spark: SparkSession, configs: yaml):
     
-    logging.info(f"clean data's configs: {configs}")
+    logger.info(f"clean data's configs: {configs}")
 
-    #read data from s3
-    city_df = read_from_s3.read_s3_csv(spark, configs['input']['city_path'], header=False, inferSchema=True)
-    produce_df = read_from_s3.read_s3_csv(spark, configs['input']['produce_path'], header=False, inferSchema=True)
+    # Read data from S3 using explicit schemas
+    city_df = read_from_s3.read_s3_csv(spark, configs['input']['city_path'], header=False, schema=city_schema)
+    produce_df = read_from_s3.read_s3_csv(spark, configs['input']['produce_path'], header=False, schema=produce_schema)
+
     user_visit_action_df = read_from_s3.read_s3_parquet(spark, configs['input']['user_visit_action_path'])
-
-    # Standardize columns (Assuming specific order as per business logic)
-    city_columns = ["city_id", "city_name", "area_name"]
-    produce_columns = ["produce_id", "produce_name", "extend_info"]
-
-    city_df = city_df.toDF(*city_columns)
-    produce_df = produce_df.toDF(*produce_columns)
-
+    
     # Filter logic: Identify 'click' behaviors
-    # We filter out invalid product IDs (-1, null, empty strings) and check if click_product_id is present.
+    # Filter out invalid product IDs (-1, null, empty strings)
     click_condition = (
         F.col('click_product_id').isNotNull() & 
         (F.col('click_product_id').cast("string") != '') & 
@@ -71,7 +66,7 @@ def run(spark: SparkSession, configs: yaml):
     user_city_product_count.createOrReplaceTempView("user_city_product_count")
 
     product_area_city_ratio_percent = spark.sql("""
-        -- Step 1: 计算城市占比明细
+        -- Step 1: Calculate city-level click distribution
         with city_ratio as (
             select
                 area_name,
@@ -83,15 +78,14 @@ def run(spark: SparkSession, configs: yaml):
                 count(*) over (partition by area_name, produce_name) as city_cnt
             from user_city_product_count
         ),
-        -- Step 2: 每个产品生成城市占比字符串
+        -- Step 2: Format city distribution string for each product
         product_city_str as (
             select
                 area_name,
                 produce_name,
                 sum(click_nums) as total_clicks,
-                -- 把前2名收集为字符串（collect_list -> array，concat_ws 把 array->string）
+                -- Format top 2 cities as string (collect_list -> array, concat_ws -> string)
                 CONCAT_WS('，',
-                    -- COLLECT_LIST(CASE WHEN city_rn <= 2 THEN CONCAT(city_name, ratio_percent, '%') END)
                     transform(
                         slice(
                             array_sort(
@@ -105,14 +99,14 @@ def run(spark: SparkSession, configs: yaml):
                     )
                 ) AS top2_str,
 
-                -- 直接求 第3名及以后 的百分比和，作为"其他"
-                CONCAT('其他', CAST(ROUND(SUM(CASE WHEN city_rn > 2 THEN ratio_percent ELSE 0 END), 1) AS STRING), '%') AS other_str,
+                -- Aggregate remaining cities as "Other"
+                CONCAT('Other', CAST(ROUND(SUM(CASE WHEN city_rn > 2 THEN ratio_percent ELSE 0 END), 1) AS STRING), '%') AS other_str,
 
                 MAX(city_cnt) AS city_cnt
             FROM city_ratio
             group by area_name, produce_name
         ),
-        -- Step 3: 每个地区给产品排序，取前 3
+        -- Step 3: Rank products per area (Top 3)
         ranked_product as (
             select
                 area_name,
@@ -125,7 +119,7 @@ def run(spark: SparkSession, configs: yaml):
                 row_number() over (partition by area_name order by total_clicks desc) as rn
             from product_city_str
         )
-        -- Step 4: 最终只取每个地区 top 3 产品
+        -- Step 4: Final selection
         select
             area_name,
             produce_name,
