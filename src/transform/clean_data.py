@@ -85,7 +85,7 @@ def run(spark: SparkSession, configs: yaml):
                 produce_name,
                 sum(click_nums) as total_clicks,
                 -- Format top 2 cities as string (collect_list -> array, concat_ws -> string)
-                CONCAT_WS('，',
+                CONCAT_WS(', ',
                     transform(
                         slice(
                             array_sort(
@@ -113,7 +113,7 @@ def run(spark: SparkSession, configs: yaml):
                 produce_name,
                 total_clicks,
                 CASE 
-                    WHEN city_cnt > 2 THEN CONCAT(top2_str, '，', other_str)
+                    WHEN city_cnt > 2 THEN CONCAT(top2_str, ', ', other_str)
                     ELSE top2_str
                 END AS city_remark,
                 row_number() over (partition by area_name order by total_clicks desc) as rn

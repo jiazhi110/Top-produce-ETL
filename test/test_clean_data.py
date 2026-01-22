@@ -102,7 +102,7 @@ def test_run_basic(monkeypatch, spark):
     actual = sorted([row.asDict() for row in result_df.collect()], key=lambda r: (r['area_name'], r['produce_name']))
 
     expected = [
-        {"area_name": "North China", "produce_name": "Apple", "total_clicks": 4, "city_remark": "Beijing75.0%，Tianjin25.0%"},
+        {"area_name": "North China", "produce_name": "Apple", "total_clicks": 4, "city_remark": "Beijing75.0%, Tianjin25.0%"},
         {"area_name": "East China", "produce_name": "Banana", "total_clicks": 2, "city_remark": "Shanghai100.0%"},
         {"area_name": "East China", "produce_name": "Apple", "total_clicks": 1, "city_remark": "Shanghai100.0%"},
     ]
