@@ -48,7 +48,8 @@ def run(spark: SparkSession, configs: yaml):
     user_visit_action_df.createOrReplaceTempView("user_activity")
 
     user_behavior_wide = spark.sql("""
-        select user_activity.click_product_id, city.city_name, city.area_name, produce.produce_name
+        select /*+ BROADCAST(city, produce) */ 
+            user_activity.click_product_id, city.city_name, city.area_name, produce.produce_name
         from user_activity
         left join city on user_activity.city_id = city.city_id
         left join produce on user_activity.click_product_id = produce.produce_id
