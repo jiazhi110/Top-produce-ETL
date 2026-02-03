@@ -27,7 +27,7 @@ from src.writers import write_to_parquet
 def parse_local_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--job', required=True, help="need job name to run")
-    parser.add_argument('--ven', default="dev", help="environment : dev or prod")
+    parser.add_argument('--ven', default="dev", help="environment :local or dev or prod")
 
     return parser.parse_args()
 
@@ -76,6 +76,14 @@ def main():
         # Commit Glue job if applicable
         if is_glue_env:
             job.commit()
+        else:
+            # Keep Spark UI alive for local debugging
+            print("\n" + "="*50)
+            print("Job finished! Spark UI is available at http://localhost:4040")
+            print("Press ENTER to exit...")
+            print("="*50 + "\n")
+            input()
+            
     except Exception as e:
         logger.error(f"Job '{job_param}' failed: {e}", exc_info=True)
         if is_glue_env:

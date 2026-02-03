@@ -1,0 +1,18 @@
+# local environment config
+# Used for running job_runner.py locally with --ven local
+
+input:
+  # Using absolute paths with file:// protocol for local Spark access
+  # Note: ${PWD} is not resolved by yaml loader, so we assume relative path resolution in python or use absolute paths.
+  # Based on job_runner logic, it loads relative to the project root or we can rely on how load_config works.
+  # Here we use relative paths which Spark on local mode handles fine usually, or absolute.
+  # Let's use specific relative paths that match the project structure.
+  
+  city_path: file:///mnt/e/Top-produce-ETL/test_data/city_info.csv/city_info.csv
+  produce_path: file:///mnt/e/Top-produce-ETL/test_data/product_info.csv/product_info.csv
+  
+  # Pointing to the NEW Parquet data
+  user_visit_action_path: file:///mnt/e/Top-produce-ETL/test_data/parquet/user_visit_action/
+
+output:
+  path: file:///mnt/e/Top-produce-ETL/test_data/output/batch_output/
