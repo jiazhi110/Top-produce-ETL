@@ -12,8 +12,8 @@ on:
         - main
         - develop
 
-  schedule:
-    - cron: '0 6 * * *'
+  # schedule:
+    # - cron: '0 6 * * *'
 
 jobs:
   # Job 1: Run Unit Tests
