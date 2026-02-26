@@ -51,10 +51,6 @@ def load_config_from_local_file(venv: str) -> dict:
 # --- Spark and Glue Context Creation ---
 def _get_project_root() -> str:
     """Calculate and return the project root directory path."""
-    # __file__ -> spark_helper.py
-    # .. -> utils/
-    # ../.. -> src/
-    # ../../.. -> project_root/
     return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 

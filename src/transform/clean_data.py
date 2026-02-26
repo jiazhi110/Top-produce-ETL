@@ -9,7 +9,7 @@ import logging
 # Initialize logger
 logger = logging.getLogger(__name__)
 
-def run(spark: SparkSession, configs: yaml):
+def run(spark: SparkSession, configs: yaml, glue_context=None, partition_filter=None, bookmark_node=None):
     
     logger.info(f"clean data's configs: {configs}")
 
@@ -17,7 +17,19 @@ def run(spark: SparkSession, configs: yaml):
     city_df = read_from_s3.read_s3_csv(spark, configs['input']['city_path'], header=False, schema=city_schema)
     produce_df = read_from_s3.read_s3_csv(spark, configs['input']['produce_path'], header=False, schema=produce_schema)
 
-    user_visit_action_df = read_from_s3.read_s3_parquet(spark, configs['input']['user_visit_action_path'])
+    # Use Job Bookmark for user_visit_action if running in Glue
+    if glue_context:
+        user_visit_action_df = read_from_s3.read_s3_parquet_with_bookmark(
+            glue_context, 
+            configs['input']['user_visit_action_path'],
+            bookmark_node_name=bookmark_node,
+            partition_filter=partition_filter
+        )
+    else:
+        user_visit_action_df = read_from_s3.read_s3_parquet(spark, configs['input']['user_visit_action_path'])
+        if partition_filter:
+            logger.info(f"Applying local partition filter: {partition_filter}")
+            user_visit_action_df = user_visit_action_df.filter(partition_filter)
     
     # Filter logic: Identify 'click' behaviors
     # Filter out invalid product IDs (-1, null, empty strings)

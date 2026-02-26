@@ -3,17 +3,10 @@
 input:
   city_path: s3a://data-platform-dev-etl-assets-us-east-1/top-produce/data/city_info.csv
   produce_path: s3a://data-platform-dev-etl-assets-us-east-1/top-produce/data/product_info.csv
-  # user_visit_action_path: s3a://justin-data-platform-dev-flink-output-v1/user_action/
+  user_visit_action_path: s3a://justin-data-platform-dev-flink-output-v1/user_action/
   # test
-  user_visit_action_path: s3a://justin-data-platform-dev-flink-output-v1/user_action/dt=2019-07-17/hr=00/
+  # user_visit_action_path: s3a://justin-data-platform-dev-flink-output-v1/user_action/dt=2019-07-17/hr=00/
   
-  # city_path: file:///mnt/e/Top-produce-ETL/test_data/city_info.csv
-  # produce_path: file:///mnt/e/Top-produce-ETL/test_data/product_info.csv
-  # user_visit_action_path: file:///mnt/e/Top-produce-ETL/test_data/user_visit_action.csv
-  
-  # For local testing, use relative paths from the project root if needed, or update absolute paths
-  # city_path: file:///${PWD}/test_data/city_info.csv
-
 output:
   # path: file:///mnt/e/Top-produce-ETL/test_data/output/
   path: s3a://justin-data-platform-dev-flink-output-v1/batch_output/
