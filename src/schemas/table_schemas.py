@@ -1,20 +1,24 @@
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, LongType, TimestampType
 
-# City Info Schema
+# City Info Schema (CSV source)
 city_schema = StructType([
     StructField("city_id", LongType(), True),
     StructField("city_name", StringType(), True),
-    StructField("area_name", StringType(), True)
+    StructField("area_name", StringType(), True),
+    # Field to capture malformed rows during CSV parsing
+    StructField("_corrupt_record", StringType(), True)
 ])
 
-# Product Info Schema
+# Product Info Schema (CSV source)
 produce_schema = StructType([
     StructField("produce_id", LongType(), True),
     StructField("produce_name", StringType(), True),
-    StructField("extend_info", StringType(), True)
+    StructField("extend_info", StringType(), True),
+    # Field to capture malformed rows during CSV parsing
+    StructField("_corrupt_record", StringType(), True)
 ])
 
-# User Visit Action Schema (Parquet usually has embedded schema, but good to have reference)
+# User Visit Action Schema (Reference for Parquet)
 USER_VISIT_ACTION_SCHEMA = StructType([
     StructField("date", StringType(), True),
     StructField("user_id", LongType(), True),

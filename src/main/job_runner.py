@@ -19,14 +19,20 @@ def main():
 
         logger.info(f"Executing logic for job: '{job_param}'")
         if job_param == 'top-produce-etl':
-            result_df = clean_data.run(
+            result_df, bad_records_df = clean_data.run(
                 spark, 
                 configs, 
                 glue_context=glue_context,
                 partition_filter=manager.partition_filter,
                 bookmark_node=manager.bookmark_node
             )
+            
             write_to_parquet.write_df_to_s3(result_df, configs['output']['path'])
+            
+            if bad_records_df.count() > 0:
+                dlq_path = configs['output']['path'].rstrip("/") + "_corrupt_records/"
+                logger.warning(f"Writing {bad_records_df.count()} corrupt records to: {dlq_path}")
+                write_to_parquet.write_df_to_s3(bad_records_df, dlq_path, mode="append")
         else:
             raise ValueError(f"Job logic for '{job_param}' not found!")
         
