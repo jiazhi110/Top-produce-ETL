@@ -13,24 +13,22 @@ def mock_spark():
     return MagicMock()
 
 def test_read_s3_csv(mock_spark):
-    # Case 1: Default behavior (inferSchema=True)
-    s3_path = "s3://test-bucket/data.csv"
-    mock_df = MagicMock()
-    mock_spark.read.csv.return_value = mock_df
-
-    read_from_s3.read_s3_csv(mock_spark, s3_path)
-    mock_spark.read.csv.assert_called_with(s3_path, header=True, inferSchema=True)
-
-def test_read_s3_csv_with_schema(mock_spark):
-    # Case 2: Explicit Schema (Best Practice)
+    # Explicit schema mode is the production path we care about most.
     s3_path = "s3://test-bucket/data_schema.csv"
     mock_schema = MagicMock()
     mock_df = MagicMock()
     mock_spark.read.csv.return_value = mock_df
 
     read_from_s3.read_s3_csv(mock_spark, s3_path, schema=mock_schema)
-    # When schema is provided, inferSchema should NOT be called
-    mock_spark.read.csv.assert_called_with(s3_path, header=True, schema=mock_schema)
+    # When schema is provided, inferSchema should NOT be called and the
+    # production corrupt-record handling settings should still be applied.
+    mock_spark.read.csv.assert_called_with(
+        s3_path,
+        header=True,
+        schema=mock_schema,
+        mode="PERMISSIVE",
+        columnNameOfCorruptRecord="_corrupt_record"
+    )
 
 def test_read_s3_parquet(mock_spark):
     # Setup

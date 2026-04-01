@@ -38,10 +38,6 @@ jobs:
       - name: Run tests with pytest
         run: |
           # Run all tests in the test/ directory
-          # This includes:
-          # - test/test_clean_data.py (Business Logic)
-          # - test/test_readers.py    (S3 I/O Mocking)
-          # - test/test_spark_helper.py (Environment Detection)
           python -m pytest -v test/
 
   # Job 2: Package and Deploy (Depends on Test Success)
